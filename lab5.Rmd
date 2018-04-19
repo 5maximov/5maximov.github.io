@@ -1,0 +1,66 @@
+---
+title: "lab5"
+author: "Maximov Evgen"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: 
+  html_document: 
+    self_contained: no
+
+---
+
+
+## Задание
+Интерактивная карта-хороплет стран мира (GVis), показатель – любой из раздела «Energy & Mining» (Энергетика и добывающие отрасли) базы Всемирного банка.
+  
+
+```{r, echo=TRUE, message=F, warning=FALSE, cashe=T, results='asis'}
+library('WDI')
+library('googleVis')
+library('data.table')
+
+# пакет с API для WorldBank
+# загрузка данных по всем странам, c 2005 по 2015 года, показатель
+# Aid Effectiveness
+dat <- WDI(indicator = 'NY.GDP.TOTL.RT.ZS', start = 2005, end = 2015)
+DT <- data.table(country = dat$country, value = dat$NY.GDP.TOTL.RT.ZS)
+# объект: таблица исходных данных
+g.tbl <- gvisTable(data = DT, 
+                   options = list(width = 220, height = 400))
+  # объект: интерактивная карта
+g.chart <- gvisGeoChart(data = DT, 
+                        locationvar = 'country', 
+                        colorvar = 'value', 
+                        options = list(width = 600, 
+                                       height = 400, 
+                                       dataMode = 'regions'))
+# размещаем таблицу и карту на одной панели (слева направо)
+TG <- gvisMerge(g.tbl, g.chart, 
+                horizontal = TRUE, 
+                tableOptions = 'bgcolor=\"#CCCCCC\" cellspacing=10')
+
+# вставляем результат в html-документ
+print(TG, 'chart')
+```
+
+
+# Карта на основе leaflet  
+
+На этой карте показаны 5 вокзалов Москвы:
+
+* Рижский вокзал 
+* Курский вокзал
+* Киевский вокзал
+* Павелецкий вокзал
+* Ярославский вокзал
+
+```{r, echo = T, message=FALSE, warning=F, results='asis'}
+library(leaflet)
+vokz <- data.frame(place = c("Рижский вокзал", "Курский вокзал",
+                                 "Киевский вокзал", "Павелецкий вокзал", "Ярослвский вокзал"),
+latitude = c(55.79296726589445, 55.757080739649155, 55.743300488240045, 55.72980681795488, 55.776477824079294),
+longitude = c(37.63260418220901, 37.66118818220893, 37.567358288012954, 37.64056318220898, 37.657740411045005))
+vokz %>% leaflet() %>% addTiles() %>%
+ addMarkers(popup = vokz$place,
+ clusterOptions = markerClusterOptions()) %>%
+ addCircles(weight = 1, radius = 10)
+```
